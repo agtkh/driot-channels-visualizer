@@ -508,9 +508,12 @@ $(document).ready(function () {
     const debouncedUpdate = debounce(updateVisualization, 300);
 
     const setupEventHandlers = () => {
-        // Automatic updates on input change
-        $('#content-freq-grid, #channel-configs-container, #grid-toggle, #visualization-title').on('input change', 'input, select', debouncedUpdate);
+        // Automatic updates for text/select inputs inside containers
+        $('#content-freq-grid, #channel-configs-container').on('input change', 'input, select', debouncedUpdate);
         
+        // Automatic updates for direct controls like the title and grid toggle
+        $('#grid-toggle, #visualization-title').on('change input', debouncedUpdate);
+
         // Button clicks that trigger an update
         $('#add-channel-btn-bottom').on('click', () => {
             createChannelConfigRow();
