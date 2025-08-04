@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>チャネルレイアウト可視化ツール</title>
+    <!-- Tailwind CSS for simple styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- D3.js for data visualization -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="mb-8">
+            <h1 class="text-2xl font-bold text-gray-700">チャネルレイアウト可視化ツール</h1>
+        </header>
+
+        <!-- Input Controls Section -->
+        <div class="space-y-8 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div id="toggle-freq-grid" class="flex justify-between items-center cursor-pointer border-b pb-2 mb-4">
+                    <h2 class="text-lg font-semibold">周波数範囲とグリッド</h2>
+                    <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div id="content-freq-grid">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">開始周波数</label>
+                            <div class="mt-1 flex rounded-md shadow-sm">
+                                <input type="number" id="start-freq" value="170" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md border-gray-300 sm:text-sm">
+                                <select id="start-freq-unit" class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                                    <option value="kHz">kHz</option>
+                                    <option value="MHz" selected>MHz</option>
+                                    <option value="GHz">GHz</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">終了周波数</label>
+                            <div class="mt-1 flex rounded-md shadow-sm">
+                                <input type="number" id="end-freq" value="177.5" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md border-gray-300 sm:text-sm">
+                                <select id="end-freq-unit" class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                                    <option value="kHz">kHz</option>
+                                    <option value="MHz" selected>MHz</option>
+                                    <option value="GHz">GHz</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">グリッド間隔 (任意)</label>
+                            <div class="mt-1 flex rounded-md shadow-sm">
+                                <input type="number" id="grid-spacing" value="200" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md border-gray-300 sm:text-sm">
+                                <select id="grid-spacing-unit" class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                                    <option value="kHz" selected>kHz</option>
+                                    <option value="MHz">MHz</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex items-end pb-1">
+                            <div class="flex items-center">
+                                <input id="grid-toggle" type="checkbox" checked class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <label for="grid-toggle" class="ml-2 block text-sm font-medium text-gray-700">グリッド表示</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div id="toggle-channel-settings" class="flex justify-between items-center cursor-pointer border-b pb-2 mb-4">
+                    <h2 class="text-lg font-semibold">チャネル設定</h2>
+                    <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div id="content-channel-settings">
+                    <div id="channel-configs-container" class="space-y-4">
+                        <!-- Channel config rows will be inserted here by JS -->
+                    </div>
+                    <div class="mt-4">
+                        <button id="add-channel-btn-bottom" class="w-full px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            + さらに設定を追加
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualization Area -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+            <div id="toggle-visualization" class="flex justify-between items-center cursor-pointer border-b pb-2 mb-4">
+                <div class="flex items-center gap-4 w-full">
+                    <input type="text" id="visualization-title" class="text-xl font-bold text-gray-700 border-none focus:ring-0 p-0 w-full" value="新しいチャネルレイアウト">
+                    <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div class="flex gap-2">
+                    <button id="export-png-btn" class="px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600 whitespace-nowrap">PNG形式</button>
+                </div>
+            </div>
+            <div id="visualization-container" class="w-full h-[600px] overflow-x-auto">
+                <!-- D3.js chart will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Channel Range Summary -->
+        <div id="channel-summary-container" class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+            <div id="toggle-channel-summary" class="flex justify-between items-center cursor-pointer border-b pb-2 mb-4">
+                <h2 class="text-lg font-semibold">チャネルサマリー</h2>
+                <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+            <div id="content-channel-summary" class="hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-700">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">占有帯域幅</th>
+                                <th scope="col" class="px-6 py-3">チャネル範囲</th>
+                                <th scope="col" class="px-6 py-3">チャネル数</th>
+                            </tr>
+                        </thead>
+                        <tbody id="channel-summary-body">
+                            <!-- Summary rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                <p class="mt-4 font-bold text-gray-800">総チャネル数: <span id="total-channel-count">0</span></p>
+            </div>
+        </div>
+
+        <!-- Block Channel Summary -->
+        <div id="block-summary-container" class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+            <div id="toggle-block-summary" class="flex justify-between items-center cursor-pointer border-b pb-2 mb-4">
+                <h2 class="text-lg font-semibold">ブロック別チャネル一覧</h2>
+                <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+            <div id="content-block-summary" class="hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-700">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">ブロック番号</th>
+                                <th scope="col" class="px-6 py-3">含まれるチャネル番号</th>
+                            </tr>
+                        </thead>
+                        <tbody id="block-summary-body">
+                            <!-- Block summary rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share Section -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+            <div id="toggle-share" class="flex justify-between items-center cursor-pointer border-b pb-2 mb-4">
+                <h2 class="text-lg font-semibold">設定の共有</h2>
+                <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+            <div id="content-share" class="hidden space-y-4">
+                <div>
+                    <label for="share-url" class="block text-sm font-medium text-gray-700">共有リンク</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <textarea id="share-url" rows="3" class="flex-1 block w-full min-w-0 rounded-none rounded-l-md border-gray-300 sm:text-sm bg-gray-50" readonly></textarea>
+                        <button id="copy-url-btn" class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-200 text-gray-700 hover:bg-gray-300">
+                            コピー
+                        </button>
+                    </div>
+                    <p id="copy-feedback" class="text-xs text-green-600 mt-1 hidden">コピーしました！</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scenargie DrIot Module Config Export -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+            <div id="toggle-driot-config" class="flex justify-between items-center cursor-pointer border-b pb-2 mb-4">
+                <h2 class="text-lg font-semibold">Scenargie DrIot Module 設定ファイル</h2>
+                <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+            <div id="content-driot-config" class="hidden">
+                <div class="flex justify-end mb-2">
+                    <button id="copy-config-btn" class="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-medium rounded-md hover:bg-gray-300">
+                        コピー
+                    </button>
+                </div>
+                <textarea id="driot-config-output" rows="15" class="w-full text-xs p-2 border border-gray-300 rounded-md bg-gray-50 font-mono" readonly></textarea>
+                 <p id="copy-config-feedback" class="text-xs text-green-600 mt-1 hidden">コピーしました！</p>
+            </div>
+        </div>
+
+        <!-- Error Message Area -->
+        <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative mb-6" role="alert">
+        </div>
+    </div>
+
+    <!-- Tooltip element -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <script src="js/main.js"></script>
+
+</body>
+</html>

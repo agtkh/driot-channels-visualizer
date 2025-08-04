@@ -1,0 +1,66 @@
+/* Custom styles for a professional look */
+body {
+    font-family: 'Inter', 'Noto Sans JP', sans-serif;
+}
+.tooltip {
+    position: absolute;
+    text-align: left;
+    padding: 8px;
+    font-size: 12px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.axis-label {
+    font-size: 0.8rem;
+    fill: #333;
+}
+.domain, .tick line {
+    stroke: #999;
+}
+.tick text {
+    fill: #333;
+    font-size: 0.75rem;
+}
+.channel-text {
+    font-size: 10px;
+    fill: white;
+    font-weight: bold;
+    pointer-events: none; /* Make sure text doesn't block mouse events on the shape */
+    text-shadow: 0 0 2px rgba(0,0,0,0.7);
+}
+.grid-line {
+    stroke: lightgray;
+    stroke-dasharray: 3,3;
+}
+.end-line {
+    stroke: gray;
+    stroke-width: 1.5;
+}
+.grid-label {
+    font-size: 10px;
+    fill: #555;
+    text-anchor: middle;
+}
+
+svg {
+    transition: transform 0.3s ease;
+}
+
+.config-row {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.moving-up {
+    transform: translateY(-50px);
+    opacity: 0;
+}
+
+.moving-down {
+    transform: translateY(50px);
+    opacity: 0;
+}
